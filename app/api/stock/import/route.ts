@@ -40,7 +40,7 @@ type ImportProductInput = {
   gstPercent: number;
   unit?: string | null;
   baseUnit?: string | null;
-  piecesPerUnit?: number | null;
+  piecesPerUnit?: number | string | null;
 };
 
 function cleanText(value: unknown) {
