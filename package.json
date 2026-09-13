@@ -1,0 +1,82 @@
+{
+  "name": "distribution-store",
+  "version": "0.3.1",
+  "private": true,
+  "description": "Distribution Store desktop application",
+  "author": "Distribution Store",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "npx prisma generate && next build --webpack",
+    "start": "next start",
+    "lint": "eslint",
+    "electron": "electron .",
+    "electron:build": "npm run build && electron-builder --win"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "@swc/helpers": "^0.5.23",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "next": "16.3.1",
+    "pg": "^8.23.0",
+    "prisma": "^7.9.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "build": {
+    "appId": "com.distributionstore.app",
+    "productName": "Distribution Store",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      ".next/**/*",
+      "public/**/*",
+      "electron/**/*",
+      "prisma/**/*",
+      "package.json",
+      "node_modules/**/*",
+      ".env"
+    ],
+    "extraResources": [
+      {
+        "from": "node_modules/.prisma",
+        "to": "app/node_modules/.prisma",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "asar": false,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

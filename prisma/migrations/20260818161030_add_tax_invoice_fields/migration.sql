@@ -1,0 +1,18 @@
+-- AlterTable
+ALTER TABLE "Product" ADD COLUMN     "itemErpId" TEXT,
+ADD COLUMN     "mrp" DOUBLE PRECISION;
+
+-- AlterTable
+ALTER TABLE "Sale" ADD COLUMN     "buyerErpId" TEXT,
+ADD COLUMN     "customerGstNo" TEXT,
+ADD COLUMN     "customerPanNo" TEXT,
+ADD COLUMN     "routeName" TEXT,
+ADD COLUMN     "salesmanName" TEXT;
+
+-- AlterTable
+ALTER TABLE "SaleItem" ADD COLUMN     "cashDiscount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN     "freeQuantity" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN     "mrp" DOUBLE PRECISION,
+ADD COLUMN     "secondaryDiscount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN     "soNo" TEXT,
+ADD COLUMN     "taxableValue" DOUBLE PRECISION NOT NULL DEFAULT 0;

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Product" ADD COLUMN     "baseUnit" TEXT NOT NULL DEFAULT 'Piece',
+ADD COLUMN     "piecesPerUnit" DOUBLE PRECISION NOT NULL DEFAULT 1;

@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Company {
+  id              Int              @id @default(autoincrement())
+  name            String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  businessProfile BusinessProfile?
+  customers       Customer[]
+  products        Product[]
+  sales           Sale[]
+  stockMovements  StockMovement[]
+  users           User[]
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  name      String?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  companyId Int
+  sessions  Session[]
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model BusinessProfile {
+  id        Int      @id @default(autoincrement())
+  shopName  String
+  gstin     String?
+  pan       String?
+  phone     String?
+  email     String?
+  address   String?
+  city      String?
+  state     String?
+  pincode   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  companyId Int      @unique
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id             Int             @id @default(autoincrement())
+  name           String
+  quantity       Float           @default(0)
+  unit           String
+  priceBeforeGst Float
+  gstPercent     Float
+  priceAfterGst  Float
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  itemErpId      String?
+  mrp            Float?
+  isActive       Boolean         @default(true)
+  baseUnit       String          @default("Piece")
+  piecesPerUnit  Float           @default(1)
+  companyId      Int
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  saleItems      SaleItem[]
+  stockMovements StockMovement[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+}
+
+model StockMovement {
+  id             Int      @id @default(autoincrement())
+  productId      Int
+  quantity       Float
+  type           String
+  priceBeforeGst Float
+  gstPercent     Float
+  priceAfterGst  Float
+  createdAt      DateTime @default(now())
+  companyId      Int
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([productId])
+}
+
+model Customer {
+  id         Int      @id @default(autoincrement())
+  name       String
+  phone      String?
+  address    String?
+  gstNo      String?
+  panNo      String?
+  buyerErpId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  companyId  Int
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model Sale {
+  id              Int        @id @default(autoincrement())
+  invoiceNo       String
+  subtotal        Float
+  gstAmount       Float
+  grandTotal      Float
+  createdAt       DateTime   @default(now())
+  customerAddress String?
+  customerName    String?
+  customerPhone   String?
+  paymentMethod   String     @default("Cash")
+  buyerErpId      String?
+  customerGstNo   String?
+  customerPanNo   String?
+  routeName       String?
+  salesmanName    String?
+  companyId       Int
+  company         Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  items           SaleItem[]
+
+  @@unique([companyId, invoiceNo])
+  @@index([companyId])
+}
+
+model SaleItem {
+  id                Int     @id @default(autoincrement())
+  saleId            Int
+  productId         Int
+  quantity          Float
+  priceBeforeGst    Float
+  gstPercent        Float
+  gstAmount         Float
+  total             Float
+  cashDiscount      Float   @default(0)
+  freeQuantity      Float   @default(0)
+  mrp               Float?
+  secondaryDiscount Float   @default(0)
+  soNo              String?
+  taxableValue      Float   @default(0)
+  unit              String  @default("Piece")
+  product           Product @relation(fields: [productId], references: [id])
+  sale              Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@index([saleId])
+  @@index([productId])
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
