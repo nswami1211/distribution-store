@@ -92,6 +92,7 @@ type Company = {
   city: string | null;
   state: string | null;
   pincode: string | null;
+  upiQrImage: string | null;
 };
 
 type Invoice = {

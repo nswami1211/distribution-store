@@ -19,6 +19,29 @@ type BillItem = {
   cashDiscount?: number;
 };
 
+type BillRequestItem = {
+  productId?: unknown;
+  quantity?: unknown;
+  freeQuantity?: unknown;
+  unit?: unknown;
+  soNo?: unknown;
+  secondaryDiscount?: unknown;
+  cashDiscount?: unknown;
+};
+
+type BillRequestBody = {
+  customerName?: unknown;
+  customerPhone?: unknown;
+  customerAddress?: unknown;
+  customerGstNo?: unknown;
+  customerPanNo?: unknown;
+  buyerErpId?: unknown;
+  salesmanName?: unknown;
+  routeName?: unknown;
+  paymentMethod?: unknown;
+  items?: unknown;
+};
+
 function generateInvoiceNumber() {
   const now = new Date();
 
@@ -99,7 +122,7 @@ export async function POST(
      */
 
     const body =
-      await request.json();
+      (await request.json()) as BillRequestBody;
 
     const {
       customerName,
@@ -143,10 +166,11 @@ export async function POST(
      */
 
     const billItems: BillItem[] =
-      items.map((item: any) => ({
-        productId: Number(
-          item.productId
-        ),
+      (items as BillRequestItem[]).map(
+        (item) => ({
+          productId: Number(
+            item.productId
+          ),
 
         quantity:
           numberOrZero(
@@ -171,16 +195,17 @@ export async function POST(
               null
             : null,
 
-        secondaryDiscount:
-          numberOrZero(
-            item.secondaryDiscount
-          ),
+          secondaryDiscount:
+            numberOrZero(
+              item.secondaryDiscount
+            ),
 
-        cashDiscount:
-          numberOrZero(
-            item.cashDiscount
-          ),
-      }));
+          cashDiscount:
+            numberOrZero(
+              item.cashDiscount
+            ),
+        })
+      );
 
     /*
      * =====================================================
@@ -952,7 +977,6 @@ export async function POST(
           return newSale;
         }
       );
-
     /*
      * =====================================================
      * BUILD INVOICE ITEMS
@@ -1095,6 +1119,12 @@ export async function POST(
               sale.company
                 .businessProfile
                 ?.pincode ??
+              null,
+
+            upiQrImage:
+              sale.company
+                .businessProfile
+                ?.upiQrImage ??
               null,
           },
 

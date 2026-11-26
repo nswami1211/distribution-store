@@ -1,52 +1,41 @@
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
+export const runtime = "nodejs";
+
+const MAX_QR_SIZE = 1.5 * 1024 * 1024;
+
 async function getCurrentUser() {
   const cookieStore = await cookies();
+  const token = cookieStore.get("auth_session")?.value;
 
-  const token =
-    cookieStore.get("auth_session")?.value;
+  if (!token) return null;
 
-  if (!token) {
-    return null;
-  }
+  const session = await prisma.session.findUnique({
+    where: { token },
+    include: { user: true },
+  });
 
-  const session =
-    await prisma.session.findUnique({
-      where: {
-        token,
-      },
-      include: {
-        user: true,
-      },
-    });
-
-  if (!session) {
-    return null;
-  }
-
-  if (
-    session.expiresAt <= new Date()
-  ) {
-    return null;
-  }
-
-  if (!session.user.isActive) {
-    return null;
-  }
+  if (!session) return null;
+  if (session.expiresAt <= new Date()) return null;
+  if (!session.user.isActive) return null;
 
   return session.user;
 }
 
-/*
- * GET PROFILE
- */
+function optionalString(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  return value.trim() || null;
+}
 
+/*
+ * GET BUSINESS PROFILE
+ */
 export async function GET() {
   try {
-    const user =
-      await getCurrentUser();
+    const user = await getCurrentUser();
 
     if (!user) {
       return NextResponse.json(
@@ -55,43 +44,29 @@ export async function GET() {
       );
     }
 
-    const profile =
-      await prisma.businessProfile.findUnique({
-        where: {
-          companyId:
-            user.companyId,
-        },
-      });
-
-    return NextResponse.json({
-      profile,
+    const profile = await prisma.businessProfile.findUnique({
+      where: {
+        companyId: user.companyId,
+      },
     });
+
+    return NextResponse.json({ profile });
   } catch (error) {
-    console.error(
-      "GET /api/business-profile:",
-      error
-    );
+    console.error("GET /api/business-profile:", error);
 
     return NextResponse.json(
-      {
-        error:
-          "Failed to load business profile.",
-      },
+      { error: "Failed to load business profile." },
       { status: 500 }
     );
   }
 }
 
 /*
- * UPDATE PROFILE
+ * UPDATE BUSINESS PROFILE
  */
-
-export async function PUT(
-  request: Request
-) {
+export async function PUT(request: Request) {
   try {
-    const user =
-      await getCurrentUser();
+    const user = await getCurrentUser();
 
     if (!user) {
       return NextResponse.json(
@@ -100,8 +75,7 @@ export async function PUT(
       );
     }
 
-    const body =
-      await request.json();
+    const body = await request.json();
 
     const shopName =
       typeof body.shopName === "string"
@@ -110,122 +84,112 @@ export async function PUT(
 
     if (!shopName) {
       return NextResponse.json(
-        {
-          error:
-            "Shop / Company Name is required.",
-        },
+        { error: "Shop / Company Name is required." },
         { status: 400 }
       );
     }
 
-    const profile =
-      await prisma.businessProfile.upsert({
+    // Validate uploaded QR image.
+    const upiQrImage = body.upiQrImage;
+
+    if (
+      upiQrImage !== null &&
+      typeof upiQrImage !== "string"
+    ) {
+      return NextResponse.json(
+        { error: "Invalid QR image data." },
+        { status: 400 }
+      );
+    }
+
+    if (typeof upiQrImage === "string") {
+      const match = upiQrImage.match(
+        /^data:image\/(png|jpeg);base64,([A-Za-z0-9+/]+={0,2})$/
+      );
+
+      if (!match) {
+        return NextResponse.json(
+          { error: "QR image must be a PNG or JPG." },
+          { status: 400 }
+        );
+      }
+
+      const imageBuffer = Buffer.from(match[2], "base64");
+
+      // Reject malformed or oversized image data.
+      if (
+        imageBuffer.length === 0 ||
+        imageBuffer.length > MAX_QR_SIZE ||
+        imageBuffer.toString("base64").replace(/=+$/, "") !==
+          match[2].replace(/=+$/, "")
+      ) {
+        return NextResponse.json(
+          {
+            error: "QR image must be no larger than 1.5 MB.",
+          },
+          { status: 400 }
+        );
+      }
+
+      // Verify the actual file signature.
+      const isPng =
+        match[1] === "png" &&
+        imageBuffer.subarray(0, 8).equals(
+          Buffer.from([
+            0x89, 0x50, 0x4e, 0x47,
+            0x0d, 0x0a, 0x1a, 0x0a,
+          ])
+        );
+
+      const isJpeg =
+        match[1] === "jpeg" &&
+        imageBuffer[0] === 0xff &&
+        imageBuffer[1] === 0xd8 &&
+        imageBuffer[2] === 0xff;
+
+      if (!isPng && !isJpeg) {
+        return NextResponse.json(
+          { error: "Invalid PNG or JPG image file." },
+          { status: 400 }
+        );
+      }
+    }
+
+    const profileData = {
+      shopName,
+      gstin: optionalString(body.gstin)?.toUpperCase() ?? null,
+      pan: optionalString(body.pan)?.toUpperCase() ?? null,
+      phone: optionalString(body.phone),
+      email: optionalString(body.email),
+      address: optionalString(body.address),
+      city: optionalString(body.city),
+      state: optionalString(body.state),
+      pincode: optionalString(body.pincode),
+      upiQrImage,
+    };
+
+    const profile = await prisma.$transaction(async (tx) => {
+      const savedProfile = await tx.businessProfile.upsert({
         where: {
-          companyId:
-            user.companyId,
+          companyId: user.companyId,
         },
-
-        update: {
-          shopName,
-
-          gstin:
-            body.gstin?.trim()
-              ? body.gstin
-                  .trim()
-                  .toUpperCase()
-              : null,
-
-          pan:
-            body.pan?.trim()
-              ? body.pan
-                  .trim()
-                  .toUpperCase()
-              : null,
-
-          phone:
-            body.phone?.trim() ||
-            null,
-
-          email:
-            body.email?.trim() ||
-            null,
-
-          address:
-            body.address?.trim() ||
-            null,
-
-          city:
-            body.city?.trim() ||
-            null,
-
-          state:
-            body.state?.trim() ||
-            null,
-
-          pincode:
-            body.pincode?.trim() ||
-            null,
-        },
-
+        update: profileData,
         create: {
-          companyId:
-            user.companyId,
-
-          shopName,
-
-          gstin:
-            body.gstin?.trim()
-              ? body.gstin
-                  .trim()
-                  .toUpperCase()
-              : null,
-
-          pan:
-            body.pan?.trim()
-              ? body.pan
-                  .trim()
-                  .toUpperCase()
-              : null,
-
-          phone:
-            body.phone?.trim() ||
-            null,
-
-          email:
-            body.email?.trim() ||
-            null,
-
-          address:
-            body.address?.trim() ||
-            null,
-
-          city:
-            body.city?.trim() ||
-            null,
-
-          state:
-            body.state?.trim() ||
-            null,
-
-          pincode:
-            body.pincode?.trim() ||
-            null,
+          companyId: user.companyId,
+          ...profileData,
         },
       });
 
-    /*
-     * Also keep Company.name
-     * synchronized with shopName.
-     */
+      await tx.company.update({
+        where: {
+          id: user.companyId,
+        },
+        data: {
+          name: shopName,
+        },
+      });
 
-    await prisma.company.update({
-      where: {
-        id: user.companyId,
-      },
-
-      data: {
-        name: shopName,
-      },
+      return savedProfile;
     });
 
     return NextResponse.json({
@@ -233,10 +197,7 @@ export async function PUT(
       profile,
     });
   } catch (error) {
-    console.error(
-      "PUT /api/business-profile:",
-      error
-    );
+    console.error("PUT /api/business-profile:", error);
 
     return NextResponse.json(
       {

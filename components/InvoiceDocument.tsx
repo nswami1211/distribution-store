@@ -11,6 +11,7 @@ type Company = {
   city: string | null;
   state: string | null;
   pincode: string | null;
+  upiQrImage: string | null;
 };
 
 type InvoiceItem = {
@@ -573,6 +574,15 @@ export default function InvoiceDocument({ invoice }: Props) {
                           Authorised Signatory
                         </span>
                       </div>
+
+                      {invoice.company.upiQrImage && (
+                        <div className="invoice-upi-qr">
+                          <img
+                            src={invoice.company.upiQrImage}
+                            alt="Bank UPI payment QR code"
+                          />
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -899,7 +909,8 @@ export default function InvoiceDocument({ invoice }: Props) {
         .footer-section {
           min-height: 34mm;
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 1fr 1fr 30mm;
+          align-items: center;
           border-top: 1px solid #000;
           padding: 3mm;
         }
@@ -911,6 +922,19 @@ export default function InvoiceDocument({ invoice }: Props) {
 
         .signature {
           text-align: right;
+        }
+
+        .invoice-upi-qr {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+        }
+
+        .invoice-upi-qr img {
+          width: 27mm;
+          height: 27mm;
+          object-fit: contain;
+          display: block;
         }
 
         .signature-space {

@@ -13,6 +13,7 @@ type Profile = {
   city: string | null;
   state: string | null;
   pincode: string | null;
+  upiQrImage: string | null;
 };
 
 export default function ProfilePage() {
@@ -27,6 +28,7 @@ export default function ProfilePage() {
       city: "",
       state: "",
       pincode: "",
+      upiQrImage: null,
     });
 
   const [loading, setLoading] =
@@ -90,6 +92,9 @@ export default function ProfilePage() {
 
             pincode:
               data.profile.pincode || "",
+
+            upiQrImage:
+              data.profile.upiQrImage || null,
           });
         }
       } catch (err) {
@@ -160,6 +165,34 @@ export default function ProfilePage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function handleQrUpload(file?: File) {
+    if (!file) return;
+
+    if (!['image/png', 'image/jpeg'].includes(file.type)) {
+      setError("Please upload a PNG or JPG image.");
+      return;
+    }
+
+    if (file.size > 1.5 * 1024 * 1024) {
+      setError("QR image must be 1.5 MB or smaller.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setProfile((current) => ({
+          ...current,
+          upiQrImage: reader.result as string,
+        }));
+        setError("");
+        setMessage("QR image selected. Click Save Changes to store it.");
+      }
+    };
+    reader.onerror = () => setError("Could not read the QR image.");
+    reader.readAsDataURL(file);
   }
 
   function updateField(
@@ -420,6 +453,43 @@ export default function ProfilePage() {
                 />
               </div>
 
+            </div>
+
+            {/* BANK UPI QR IMAGE */}
+            <div className="rounded-lg border border-gray-200 p-5">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Bank UPI QR Code
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Upload your bank-provided QR image. This exact image will be printed on the invoice.
+                It will not be generated or modified, and it will not include the invoice amount.
+              </p>
+
+              <input
+                type="file"
+                accept="image/png,image/jpeg"
+                onChange={(e) => handleQrUpload(e.target.files?.[0])}
+                className="mt-4 block w-full text-sm text-gray-700 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+              />
+
+              {profile.upiQrImage && (
+                <div className="mt-4 flex flex-wrap items-start gap-4">
+                  <div className="rounded-lg border bg-white p-2">
+                    <img
+                      src={profile.upiQrImage}
+                      alt="Uploaded bank UPI QR code preview"
+                      className="h-40 w-40 object-contain"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setProfile((current) => ({ ...current, upiQrImage: null }))}
+                    className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                  >
+                    Remove QR Image
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* MESSAGE */}
