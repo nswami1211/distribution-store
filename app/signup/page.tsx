@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
@@ -140,21 +141,19 @@ export default function SignupPage() {
       <div className="mx-auto w-full max-w-3xl">
 
         {/* BRAND */}
+        <div className="mb-8 flex flex-col items-center text-center">
+          <Image
+            src="/logo.png"
+            alt="StockSense"
+            width={220}
+            height={72}
+            priority
+            className="mb-3 h-auto w-40 object-contain sm:w-48"
+          />
 
-        <div className="mb-8 text-center">
-
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-600 text-3xl font-bold text-white shadow-lg">
-            S
-          </div>
-
-          <h1 className="text-2xl font-bold text-gray-900">
-            Stock Sence
-          </h1>
-
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="text-sm text-gray-500">
             Distribution Management System
           </p>
-
         </div>
 
         {/* CARD */}
@@ -607,7 +606,7 @@ export default function SignupPage() {
             >
               {loading
                 ? "Creating Account..."
-                : "Create Stock Sence Account"}
+                : "Create StockSense Account"}
             </button>
 
           </form>
@@ -632,7 +631,7 @@ export default function SignupPage() {
         </div>
 
         <p className="mt-6 text-center text-xs text-gray-400">
-            Stock Sence © 2026. All rights reserved.
+            StockSense © 2026. All rights reserved.
             </p>
 
       </div>

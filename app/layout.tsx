@@ -12,10 +12,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
-  title: "Stock Sence",
-  description:
-    "Stock Sence - Distribution Management System",
+export const metadata: Metadata = {
+  title: "StockSense",
+  description: "StockSense - Distribution Management System",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/stocksense-icon.png",
+  },
 };
 
 export default function RootLayout({

@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 
@@ -128,13 +129,16 @@ function LoginForm() {
 
         <div className="mb-8 text-center">
 
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-600 text-3xl text-white shadow-lg">
-            S
+          <div className="mx-auto mb-4 flex justify-center">
+            <Image
+              src="/logo.png"
+              alt="StockSense logo"
+              width={280}
+              height={92}
+              priority
+              className="h-auto w-64 object-contain"
+            />
           </div>
-
-          <h1 className="text-2xl font-bold text-gray-900">
-            Stock Sence
-          </h1>
 
           <p className="mt-1 text-sm text-gray-500">
             Distribution Management System
@@ -288,7 +292,7 @@ function LoginForm() {
         </div>
 
         <p className="mt-6 text-center text-xs text-gray-400">
-          Stock Sence © 2026. All rights reserved.
+          StockSense © 2026. All rights reserved.
         </p>
 
       </div>
