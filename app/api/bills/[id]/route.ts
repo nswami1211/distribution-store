@@ -163,6 +163,9 @@ export async function GET(
         pincode:
           businessProfile?.pincode ??
           null,
+        upiQrImage:
+  businessProfile?.upiQrImage ??
+  null,
       },
 
       /*
